@@ -1,6 +1,6 @@
 import copy
 import random
-from game_config import BOARD_SIZE, DIRECTIONS
+from game_files.game_config import BOARD_SIZE, DIRECTIONS
 
 
 INF = 2**64
@@ -49,7 +49,7 @@ def heuristic_function(board):
            + (4 * merge_bonus(board)))
     return sum
 
-def getNextBestMove(board, depth=2, isExpectimax=True):
+def getNextBestMove(board, depth=2):
     bestScore = -INF
     bestNextMove = DIRECTIONS[0]
     
@@ -58,10 +58,7 @@ def getNextBestMove(board, depth=2, isExpectimax=True):
         moved = copyBoard.move(dir) 
         if not moved:
             continue
-        if isExpectimax==True:
-            score, _ = expectimax(copyBoard, depth, dir)
-        else: 
-            score, _ = expectiminimax(copyBoard, depth, dir)
+        score, _ = expectimax(copyBoard, depth, dir)
             
         if score >= bestScore:
             bestScore = score
@@ -70,32 +67,7 @@ def getNextBestMove(board, depth=2, isExpectimax=True):
     return bestNextMove
 
 def expectimax(board, depth, dir=None):
-    from game import Tile
-    
-    if board.checkLoss():
-        return -INF, dir
-    elif depth == 0:
-        return heuristic_function(board), dir
-
-    if depth % 2 == 1:
-        bestScore = -INF
-        bestMove = None
-        for dir in DIRECTIONS:
-            copyBoard = copy.deepcopy(board)
-            moved = copyBoard.move(dir)
-
-            if moved:
-                score = expectimax(copyBoard, depth - 1, dir)[0]
-                if score > bestScore:
-                    bestScore = score
-                    bestMove = dir
-        return bestScore, bestMove
-
-    else:
-        return 0, None
-
-def expectiminimax(board, depth, dir=None):
-    from game import Tile
+    from game_files.game import Tile
     #return -inf for bad states
     if board.checkLoss():
         return -INF, dir
@@ -109,9 +81,9 @@ def expectiminimax(board, depth, dir=None):
         for dir in DIRECTIONS:
             copyBoard = copy.deepcopy(board)
             moved = copyBoard.move(dir)
-            #if valid move call expectiminimax function to get score
+            #if valid move call expectimax function to get score
             if moved:
-                score = expectiminimax(copyBoard, depth - 1, dir)[0]
+                score = expectimax(copyBoard, depth - 1, dir)[0]
                 if score > bestScore:
                     bestScore = score
                     bestMove = dir
@@ -124,7 +96,7 @@ def expectiminimax(board, depth, dir=None):
         openTiles = board.get_empty_positions()
         avgerage_score = 0
         for r, c in openTiles:
-            #add tile to board and call expectiminimax on it
+            #add tile to board and call expectimax on it
             #get avg score based on prob of tile being placed at r, c
             prob_empty = 1.0 / len(openTiles) #prob of a tile being placed in any of the empty spots
             copy_value_2 = copy.deepcopy(board)
@@ -132,11 +104,11 @@ def expectiminimax(board, depth, dir=None):
             
             copy_value_2.board[r][c] = Tile(2) 
             # 90% chance for 2 to spawn
-            score_2 = 0.9 * expectiminimax(copy_value_2, depth - 1, dir)[0]
+            score_2 = 0.9 * expectimax(copy_value_2, depth - 1, dir)[0]
             
             copy_value_4.board[r][c] = Tile(4) 
             #10% chance for 4 to spawn
-            score_4 = 0.1 * expectiminimax(copy_value_4, depth - 1, dir)[0]
+            score_4 = 0.1 * expectimax(copy_value_4, depth - 1, dir)[0]
             
             avgerage_score += ((score_2 + score_4) * prob_empty)
 

@@ -1,5 +1,5 @@
-import game as model 
-import game_config
+import game_files.game as model 
+import game_files.game_config
 import random
 
 board = model.Board()
